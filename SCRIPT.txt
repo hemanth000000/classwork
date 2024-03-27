@@ -1,0 +1,525 @@
+//jshint esversion:6
+
+// require("dotenv").config();
+const express = require("express");
+const bodyParser = require("body-parser");
+const ejs = require("ejs");
+const mongoose = require("mongoose");
+
+const app = express();
+
+app.use(express.static("public"));
+app.set('view engine', 'ejs');
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
+
+const products = [{
+    id: 1,
+    name: "Rice",
+    src: "/images/Rice.jpg"
+  }, {
+    id: 2,
+    name: "Tomato",
+    src: "/images/Tomato.jpg"
+  },
+  {
+    id: 3,
+    name: "Brinjal",
+    src: "/images/Brinjal.jpg"
+  },
+  {
+    id: 4,
+    name: "Potato",
+    src: "/images/Potato.jpg"
+  },
+  {
+    id: 5,
+    name: "Cauliflower",
+    src: "/images/Cauliflower.jpg"
+  },
+  {
+    id: 6,
+    name: "Beans",
+    src: "/images/Beans.jpg"
+  },
+  {
+    id: 7,
+    name: "Carrot",
+    src: "/images/Carrot.jpg"
+  },
+  {
+    id: 8,
+    name: "Cabbage",
+    src: "/images/Cabbage.jpg"
+  },
+  {
+    id: 9,
+    name: "Okra",
+    src: "/images/Okra.jpg"
+  },
+  {
+    id: 10,
+    name: "Raddish",
+    src: "/images/Raddish.jpg"
+  },
+  {
+    id: 11,
+    name: "Beetroot",
+    src: "/images/Beetroot.jpg"
+  },
+  {
+    id: 12,
+    name: "Rice",
+    src: "/images/Rice.jpg"
+  },
+  {
+    id: 13,
+    name: "Apple",
+    src: "/images/Apple.jpg"
+  },
+  {
+    id: 14,
+    name: "Banana",
+    src: "/images/Banana.jpg"
+  },
+  {
+    id: 15,
+    name: "Pomegranate",
+    src: "/images/Pomegranate.jpg"
+  },
+  {
+    id: 16,
+    name: "Orange",
+    src: "/images/Orange.jpg"
+  },
+  {
+    id: 17,
+    name: "Pineapple",
+    src: "/images/Pineapple.jpg"
+
+  },
+  {
+    id: 18,
+    name: "Custardapple",
+    src: "/images/Custardapple.jpg"
+  },
+  {
+    id: 19,
+    name: "Watermelon",
+    src: "/images/Watermelon.jpg"
+  },
+  {
+    id: 20,
+    name: "Muskmelon",
+    src: "/images/Muskmelon.jpg"
+  },
+  {
+    id: 21,
+    name: "Jackfruit",
+    src: "/images/Jackfruit.jpg"
+  },
+  {
+    id: 22,
+    name: "Cashew",
+    src: "/images/Cashew.jpg"
+  },
+  {
+    id: 23,
+    name: "Almond",
+    src: "/images/Almond.jpg"
+  },
+  {
+    id: 24,
+    name: "Walnut",
+    src: "/images/Walnut.jpg"
+  },
+  {
+    id: 25,
+    name: "Raisin",
+    src: "/images/Raisin.jpg"
+  }
+
+];
+mongoose.connect("mongodb://localhost:27017/Phoenix", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
+
+mongoose.set("useCreateIndex", true);
+
+const farmersSchema = new mongoose.Schema({
+  username: String,
+  tel: Number,
+  kisanId: String,
+  address: String,
+  password: String
+
+});
+const customersSchema = new mongoose.Schema({
+  username: String,
+  tel: Number,
+  email: String,
+  address: String,
+  password: String
+
+});
+const productSchema = new mongoose.Schema({
+  farmer_id: String,
+  farmer_name: String,
+  product_id: String,
+  product_src: String,
+  product: String,
+  quantity: Number,
+  price: Number
+});
+
+const orderSchema = new mongoose.Schema({
+  farmer_id: String,
+  customer_id: String,
+  product_name: String,
+  product_quantity: Number,
+  product_price: Number
+});
+
+const farmer = new mongoose.model("users_farmer", farmersSchema);
+
+const customer = new mongoose.model("users_customer", customersSchema);
+
+
+const product = new mongoose.model("product", productSchema);
+
+const order = new mongoose.model("order", orderSchema);
+
+
+app.get("/", function(req, res) {
+  res.render("login");
+});
+
+app.get("/buying-register", function(req, res) {
+  res.render("buying-register");
+});
+
+app.get("/selling-register", function(req, res) {
+  res.render("selling-register");
+});
+
+
+
+app.post("/selling-register", function(req, res) {
+  const newFarmer = new farmer({
+    username: req.body.name,
+    tel: req.body.tel,
+    kisanId: req.body.kisanId,
+    address: req.body.address,
+    password: req.body.password
+  });
+  farmer.findOne({
+    kisanId: newFarmer.kisanId
+  }, function(err, found) {
+    if (err)
+      console.log(err);
+    else {
+      if (found) {
+        res.redirect("/selling-register")
+      } else {
+        newFarmer.save(function(err) {
+          if (err)
+            console.log(err + "errrrrrr");
+          else
+            res.render("farmerpage", {
+              user: newFarmer,
+              products: products,
+              stock: [],
+              status: "",
+              orders:[]
+            });
+        });
+      }
+
+    }
+  });
+});
+
+app.post("/buying-register", function(req, res) {
+  const newCustomer = new customer({
+    username: req.body.name,
+    tel: req.body.tel,
+    email: req.body.email,
+    address: req.body.address,
+    password: req.body.password,
+  });
+
+  customer.findOne({
+    email: newCustomer.email
+  }, function(err, found) {
+    if (err)
+      console.log(err);
+    else {
+      if (found) {
+        res.redirect("/buying-register");
+      } else {
+        newCustomer.save(function(err) {
+          if (err)
+            console.log(err + "errrrrrr");
+          else {
+            product.find({
+              __v: 0
+            }, function(err, stock) {
+              if (err)
+                console.log(err);
+              else {
+                let data = stock;
+                res.render("customer_page", {
+                  user: newCustomer,
+                  //product data including farmer name
+                  stock: data,
+                  status: "",
+                  orders:[]
+                });
+
+              }
+            });
+
+          }
+        });
+      }
+
+    }
+  });
+});
+app.post("/submit", function(req, res) {
+  let productname = products.find(o => o.name === req.body.product);
+  let productId = productname.id;
+  let productSrc = productname.src;
+
+  const newProduct = new product({
+    farmer_id: req.body.farmerId,
+    farmer_name: req.body.farmerName,
+    product_id: productId,
+    product_src: productSrc,
+    product: req.body.product,
+    quantity: req.body.quantity,
+    price: req.body.price,
+  });
+
+  newProduct.save(function(err) {
+    if (err)
+      console.log(err);
+    else
+      farmer.findOne({
+        _id: req.body.farmerId
+      }, function(err, found) {
+        if (err)
+          console.log(err);
+        else {
+          product.find({
+            farmer_id: found._id
+          }, function(err, docs) {
+            if (err) {
+              console.log(err);
+            } else {
+
+              let userStock = docs;
+
+              order.find({farmer_id:found._id},function(err,orderdata){
+                res.render("farmerpage", {
+                  user: found,
+                  //product data including farmer name
+                  stock: userStock,
+                  products: products,
+                  status: "Uploaded Successfully!!",
+                  orders:orderdata
+                });
+              });
+            }
+          });
+        }
+      });
+  })
+});
+app.post("/login-farmer", function(req, res) {
+  const kisanid = req.body.kisanId;
+  const password = req.body.password;
+  farmer.findOne({
+    kisanId: kisanid
+  }, function(err, found) {
+    if (err)
+      console.log(err);
+    else {
+      if (found) {
+
+        if (found.password === password) {
+          product.find({
+            farmer_id: found._id
+          }, function(err, docs) {
+            if (err) {
+              console.log(err);
+            } else {
+              let userStock = docs;
+              order.find({farmer_id:found._id},function(err,orderdata){
+                res.render("farmerpage", {
+                  user: found,
+                  //product data including farmer name
+                  stock: userStock,
+                  products: products,
+                  status: "",
+                  orders:orderdata
+                });
+              });
+              // res.render("farmerpage", {
+              //   user: found,
+              //   products: products,
+              //   stock: userStock,
+              //   status: ""
+              // });
+            }
+          });
+
+
+        } else
+          res.redirect("/");
+      }
+    }
+  });
+});
+
+
+
+app.post("/cart", function(req, res) {
+  const productId = req.body.selectedProductId;
+  const orderquantity = req.body.orderedQuantity;
+  const userId = req.body.userId;
+  const customerUserId = userId;
+
+
+  console.log(productId);
+  console.log(orderquantity);
+  product.findOne({
+    _id: productId
+  }, function(err, found) {
+    if (orderquantity === found.quantity) {
+      product.findOneAndRemove({
+          _id: productId
+        },
+        function(err, docs) {
+          if (err) {
+            console.log(err)
+          } else {
+            console.log("Removed User : ", docs);
+          }
+        });
+    } else {
+      product.findOneAndUpdate({
+        _id: productId
+      }, {
+        $set: {
+          quantity: (found.quantity - orderquantity)
+        }
+      }, null, function(err, doc) {});
+
+    }
+  });
+  customer.findOne({
+    _id: userId
+  }, function(err, found) {
+    if (err)
+      console.log(err);
+    else {
+      product.find({
+        __v: 0
+      }, function(err, stock) {
+        if (err)
+          console.log(err);
+        else {
+          let data = stock;
+          order.find({customer_id:found._id},function(err,orderdata){
+            res.render("customer_page", {
+              user: found,
+              //product data including farmer name
+              stock: data,
+              status: "Order Placed!!",
+              orders:orderdata
+            });
+          })
+
+        }
+      });
+    }
+  });
+  product.findOne({
+    _id: productId
+  }, function(err, found) {
+    if (err)
+      console.log(err);
+    else {
+
+      const newOrder = new order({
+
+        farmer_id: found.farmer_id,
+        customer_id: userId,
+        product_name: found.product,
+        product_quantity: orderquantity,
+        product_price: found.price
+      })
+      console.log(newOrder);
+      newOrder.save();
+    }
+  });
+});
+
+
+
+app.post("/login-customer", function(req, res) {
+  const email = req.body.email;
+  const password = req.body.password;
+  customer.findOne({
+    email: email
+  }, function(err, found) {
+    if (err)
+      console.log(err);
+    else {
+      if (found) {
+        if (found.password === password) {
+          product.find({
+            __v: 0
+          }, function(err, stock) {
+            if (err)
+              console.log(err);
+            else {
+              let data = stock;
+              order.find({customer_id:found._id},function(err,orderdata){
+                res.render("customer_page", {
+                  user: found,
+                  //product data including farmer name
+                  stock: data,
+                  status: "",
+                  orders:orderdata
+                });
+              });
+
+
+            }
+          })
+
+
+        } else
+          res.redirect("/");
+      }
+    }
+  });
+});
+
+
+app.get("/logout", function(req, res) {
+
+  res.redirect("/");
+});
+app.get("/about", function(req, res) {
+  console.log("rendered");
+  res.render("about");
+})
+
+app.listen(3000, function() {
+  console.log("Server started on port 3000.");
+});
